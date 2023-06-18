@@ -2,7 +2,9 @@ import uuid
 from flask import request
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+
 from db import stores
+from shemas import StoreSchema
 
 
 blp = Blueprint("Stores", "stores", description="Operations on stores")
@@ -10,6 +12,7 @@ blp = Blueprint("Stores", "stores", description="Operations on stores")
 
 @blp.route("/store/<string:store_id>")
 class Store(MethodView):
+    @blp.response(200, StoreSchema)
     def get(self, store_id):
         try:
             # You presumably would want to include the store's items here too
@@ -28,10 +31,13 @@ class Store(MethodView):
 
 @blp.route("/store")
 class StoreList(MethodView):
+    @blp.response(200, StoreSchema, many=True)
     def get(self):
-        return {"stores": list(stores.values())}
+        return stores.values()
 
-    def post(self):
+    @blp.arguments(StoreSchema)
+    @blp.response(200, StoreSchema)
+    def post(self, store_data):
         store_data = request.get_json()
         if "name" not in store_data:
             abort(
